@@ -4,6 +4,11 @@ import "./CHNGovernanceStorage.sol";
 
 contract CHNGovernance is CHNGovernanceStorage {
 
+    event AcceptAdmin(address indexed guardian);
+    event Abdicate(address indexed guardian);
+    event QueueSetTimelockPendingAdmin(address indexed guardian, address indexed newPendingAdmin, uint indexed eta);
+    event ExecuteSetTimelockPendingAdmin(address indexed guardian, address indexed newPendingAdmin, uint indexed eta);
+
     constructor(address timelock_, address chnStaking_, uint256 poolId_, address guardian_, uint256[] memory configs) public {
         timelock = TimelockInterface(timelock_);
         chnTokenStaking = CHNTokenStaking(chnStaking_);
@@ -199,21 +204,29 @@ contract CHNGovernance is CHNGovernanceStorage {
     function __acceptAdmin() public {
         require(msg.sender == guardian, "GovernorAlpha::__acceptAdmin: sender must be gov guardian");
         timelock.acceptAdmin();
+        
+        emit AcceptAdmin(msg.sender);
     }
 
     function __abdicate() public {
         require(msg.sender == guardian, "GovernorAlpha::__abdicate: sender must be gov guardian");
         guardian = address(0);
+
+        emit Abdicate(msg.sender);
     }
 
     function __queueSetTimelockPendingAdmin(address newPendingAdmin, uint eta) public {
         require(msg.sender == guardian, "GovernorAlpha::__queueSetTimelockPendingAdmin: sender must be gov guardian");
         timelock.queueTransaction(address(timelock), 0, "setPendingAdmin(address)", abi.encode(newPendingAdmin), eta);
+
+        emit QueueSetTimelockPendingAdmin(msg.sender, newPendingAdmin, eta);
     }
 
     function __executeSetTimelockPendingAdmin(address newPendingAdmin, uint eta) public {
         require(msg.sender == guardian, "GovernorAlpha::__executeSetTimelockPendingAdmin: sender must be gov guardian");
         timelock.executeTransaction(address(timelock), 0, "setPendingAdmin(address)", abi.encode(newPendingAdmin), eta);
+
+        emit ExecuteSetTimelockPendingAdmin(msg.sender, newPendingAdmin, eta);
     }
 
     function add256(uint256 a, uint256 b) internal pure returns (uint) {
