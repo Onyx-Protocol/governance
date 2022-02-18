@@ -13,7 +13,7 @@ contract CHNTimelock {
     event QueueTransaction(bytes32 indexed txHash, address indexed target, uint value, string signature, bytes data, uint eta);
 
     uint public constant GRACE_PERIOD = 14 days;
-    uint public constant MINIMUM_DELAY = 0 days;
+    uint public constant MINIMUM_DELAY = 2 days;
     uint public constant MAXIMUM_DELAY = 30 days;
 
     address public admin;
@@ -72,7 +72,6 @@ contract CHNTimelock {
 
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
         queuedTransactions[txHash] = true;
-        uint index = txQueues.length;
         TransactionData memory txData = TransactionData({
             target: target,
             value: value,
