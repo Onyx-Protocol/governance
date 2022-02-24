@@ -52,12 +52,12 @@ contract CHNGovernance is CHNGovernanceStorage {
         votingPeriod = value;
     }
 
-    function getVotingPower(address user) public view returns (uint256) {
-        return chnTokenStaking.getStakingAmount(poolId, user);
+    function getVotingPower(address user, uint blockNumber) public view returns (uint256) {
+        return chnTokenStaking.getPriorVotes(poolId, user, blockNumber);
     }
 
     function propose(address[] memory targets, uint[] memory values, string[] memory signatures, bytes[] memory calldatas, string memory description) public returns (uint) {
-        require(getVotingPower(msg.sender) >= proposalThreshold, "GovernorAlpha::propose: proposer votes below proposal threshold");
+        require(getVotingPower(msg.sender, block.number) >= proposalThreshold, "GovernorAlpha::propose: proposer votes below proposal threshold");
         require(targets.length == values.length && targets.length == signatures.length && targets.length == calldatas.length, "GovernorAlpha::propose: proposal function information arity mismatch");
         require(targets.length != 0, "GovernorAlpha::propose: must provide actions");
         require(targets.length <= proposalMaxOperations, "GovernorAlpha::propose: too many actions");
@@ -127,7 +127,7 @@ contract CHNGovernance is CHNGovernanceStorage {
         require(state != ProposalState.Executed, "GovernorAlpha::cancel: cannot cancel executed proposal");
 
         Proposal storage proposal = proposals[proposalId];
-        require(msg.sender == guardian || getVotingPower(proposal.proposer) < proposalThreshold, "GovernorAlpha::cancel: proposer above threshold");
+        require(msg.sender == guardian || getVotingPower(proposal.proposer, proposal.startBlock) < proposalThreshold, "GovernorAlpha::cancel: proposer above threshold");
 
         proposal.canceled = true;
         for (uint i = 0; i < proposal.targets.length; i++) {
@@ -186,7 +186,7 @@ contract CHNGovernance is CHNGovernanceStorage {
         Proposal storage proposal = proposals[proposalId];
         Receipt storage receipt = proposal.receipts[voter];
         require(receipt.hasVoted == false, "GovernorAlpha::_castVote: voter already voted");
-        uint256 votes = getVotingPower(voter);
+        uint256 votes = getVotingPower(voter, proposal.startBlock);
 
         if (support) {
             proposal.forVotes = add256(proposal.forVotes, votes);
