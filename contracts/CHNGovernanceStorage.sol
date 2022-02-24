@@ -12,7 +12,7 @@ interface TimelockInterface {
 }
 
 interface CHNTokenStaking {
-    function getStakingAmount(uint256 pid, address user) external view returns (uint256);
+    function getPriorVotes(uint256 pid, address user, uint blockNumber) external view returns (uint256);
 }
 
 contract CHNGovernanceStorage {
