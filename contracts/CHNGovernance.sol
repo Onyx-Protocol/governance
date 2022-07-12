@@ -127,7 +127,7 @@ contract CHNGovernance is CHNGovernanceStorage {
         require(state != ProposalState.Executed, "GovernorAlpha::cancel: cannot cancel executed proposal");
 
         Proposal storage proposal = proposals[proposalId];
-        require(msg.sender == guardian || getVotingPower(proposal.proposer, proposal.startBlock) < proposalThreshold, "GovernorAlpha::cancel: proposer above threshold");
+        require(msg.sender == guardian || getVotingPower(proposal.proposer, sub256(block.number, 1)) < proposalThreshold, "GovernorAlpha::cancel: proposer above threshold");
 
         proposal.canceled = true;
         for (uint i = 0; i < proposal.targets.length; i++) {
